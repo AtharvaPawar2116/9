@@ -1,40 +1,86 @@
-def is_safe(node, color, graph, colors, c):
+# Function to check if the color assignment is safe for the current node
+def is_safe(node, color, graph, colors):
     for i in range(len(graph)):
-        if graph[node][i] == 1 and colors[i] == c:
+        # Check if there's a conflict (i.e., an adjacent node has the same color)
+        if graph[node][i] == 1 and colors[i] == color:
             return False
     return True
 
+# Backtracking solution to assign colors to the graph
 def graph_coloring_util(graph, m, colors, node):
+    # If all nodes are colored, we've found a solution
     if node == len(graph):
-        print("Solution:", colors)
-        return True  # return False to print all solutions
+        print("Backtracking Solution:", colors)
+        return True
+    
+    # Try assigning each color from 1 to m to the current node
     for c in range(1, m + 1):
-        if is_safe(node, c, graph, colors, c):
-            colors[node] = c
+        if is_safe(node, c, graph, colors):  # Check if the color is safe
+            colors[node] = c  # Assign the color
+            # Recursively assign colors to the next node
             if graph_coloring_util(graph, m, colors, node + 1):
-                return True
-            colors[node] = 0
-    return False
+                return True  # Stop after finding the first valid solution
+            colors[node] = 0  # Backtrack if no valid solution is found
+    return False  # No solution found
 
-def graph_coloring(graph, m):
-    colors = [0] * len(graph)
-    if not graph_coloring_util(graph, m, colors, 0):
-        print("No solution exists.")
+# Branch and Bound solution to assign colors to the graph
+def branch_and_bound(graph, m, colors, node, lower_bound):
+    # If all nodes are colored, we've found a solution
+    if node == len(graph):
+        print("Branch and Bound Solution:", colors)
+        return True
+    
+    # Try assigning each color from 1 to m to the current node
+    for c in range(1, m + 1):
+        if is_safe(node, c, graph, colors):  # Check if the color is safe
+            colors[node] = c  # Assign the color
+            new_lower_bound = max(lower_bound, c)  # Update the lower bound
+            # If the current color assignment doesn't exceed the lower bound
+            if new_lower_bound <= m:
+                if branch_and_bound(graph, m, colors, node + 1, new_lower_bound):
+                    return True  # Stop after finding the first valid solution
+            colors[node] = 0  # Backtrack if no valid solution is found
+    return False  # No solution found
 
-# -----------------------------
-# Take input from user
-# -----------------------------
-n = int(input("Enter number of vertices in the graph: "))
-print("Enter the adjacency matrix row by row:")
-graph = []
-for i in range(n):
-    row = list(map(int, input(f"Row {i+1}: ").split()))
-    if len(row) != n:
-        print("Invalid row length. Please enter exactly", n, "integers.")
-        exit()
-    graph.append(row)
+# Driver function for Backtracking approach
+def graph_coloring_backtracking(graph, m):
+    colors = [0] * len(graph)  # Initialize color assignment to 0 (unassigned)
+    if not graph_coloring_util(graph, m, colors, 0):  # Start from node 0
+        print("No solution exists using Backtracking.")
 
-m = int(input("Enter the number of colors: "))
+# Driver function for Branch and Bound approach
+def graph_coloring_branch_bound(graph, m):
+    colors = [0] * len(graph)  # Initialize color assignment to 0 (unassigned)
+    lower_bound = 0  # Starting bound (no colors assigned)
+    if not branch_and_bound(graph, m, colors, 0, lower_bound):  # Start from node 0
+        print("No solution exists using Branch and Bound.")
 
-print("\nGraph coloring solution:")
-graph_coloring(graph, m)
+# Function to accept user input for the graph and number of colors
+def input_graph_and_colors():
+    # Number of nodes (vertices)
+    n = int(input("Enter the number of vertices in the graph: "))
+    
+    # Create an empty graph as an adjacency matrix
+    graph = []
+    print("Enter the adjacency matrix (use space to separate elements in each row):")
+    for i in range(n):
+        row = list(map(int, input().split()))
+        graph.append(row)
+    
+    # Number of colors allowed
+    m = int(input("Enter the number of colors: "))
+    
+    return graph, m
+
+# Main function
+def main():
+    graph, m = input_graph_and_colors()  # Get graph and number of colors from the user
+    
+    print("\nBacktracking Approach:")
+    graph_coloring_backtracking(graph, m)
+    
+    print("\nBranch and Bound Approach:")
+    graph_coloring_branch_bound(graph, m)
+
+# Run the main function
+main()
